@@ -27,7 +27,7 @@ int str_to_int(char* ptr_to_char){
 }
 int help_fn(){
 	printf(help);
-	FILE *file = fopen("env_vars.sh", "w");
+	FILE *file = fopen("vzillash.sh", "w");
 	if (file == NULL) {
         	perror("Error opening file");
         	return 1;
@@ -76,9 +76,6 @@ int install(char* input, bool switch_or_not){
 	}else{ // 2 numbers
 		
 	}
-	printf("%u", big);
-	printf(" %u", medium);
-	printf(" %u", mini);
 	bool valid = false;
 	for(i = 0; i < (sizeof(versions) / sizeof(version));i++){
 		version version_var = versions[i];
@@ -88,7 +85,7 @@ int install(char* input, bool switch_or_not){
 		}
 	}
 	if(valid == false){
-		printf("Invalid version");
+		printf("Invalid version\n");
 		exit(1);
 	}
 	char new_url[(sizeof(url) - 1) + 8 + (sizeof(v_linux) - 1)];
@@ -116,14 +113,9 @@ int install(char* input, bool switch_or_not){
 		system("rm -rf ~/Downloads/v_linux");
 		system(new_url);
 	}
-	printf("\n");
-	printf(new_url);
-	printf("\n");
-	printf(path);
 	if(switch_or_not == false){
 		system("unzip ~/Downloads/v_linux.zip -d ~/Downloads/v_linux");
 	}
-	printf(path);
 	unsigned int before = 0;
     	char* local_bin = "/.local/bin/vlang";
 	char* old_path = getenv("PATH");
@@ -167,9 +159,6 @@ int install(char* input, bool switch_or_not){
 		new_old_path[k] = '\0';
 	}
 	i = 0;
-	printf("\n");
-	printf(new_old_path);
-	printf("\n");
 	
     	if (old_path == NULL) {
         	old_path = ""; 
@@ -247,7 +236,7 @@ int install(char* input, bool switch_or_not){
 		i++;
 	}
 	path[i] = '\0';
-	FILE *file = fopen("env_vars.sh", "w");
+	FILE *file = fopen("vzillash.sh", "w");
 	if (file == NULL) {
         	perror("Error opening file");
         	return 1;
@@ -256,7 +245,6 @@ int install(char* input, bool switch_or_not){
 	fclose(file);
 }
 int main (int argc, char **argvk){
-	printf("%u", argc);
 	if(argc != 3){
 		help_fn();
 		return 0;
