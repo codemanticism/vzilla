@@ -12,9 +12,12 @@ char help[] =
 char start[] = 
 "\\  //\n"
 " \\//ZILLA\n";
-char* url = "wget https://github.com/vlang/v/releases/download/";
-char* v_linux = "/v_linux.zip -O ~/Downloads/v_linux.zip";
+char url_char[] = "wget --no-check-certificate https://www.github.com/vlang/v/releases/download/";
+char* url = url_char;
+char v_linux_char[] = "/v_linux.zip -O ~/Downloads/v_linux.zip";
+char* v_linux = v_linux_char;
 char* nothing = "";
+char* job_done = "Job done!";
 struct version{
 	unsigned int big;
 	unsigned int medium;
@@ -37,12 +40,7 @@ int str_to_int(char* ptr_to_char /*pointer to last digit*/){
 	return result;
 }
 void wait_s(int seconds) {
-    // Calculate the time when the wait should end
-    clock_t start_time = clock();
-    clock_t end_time = start_time + seconds * CLOCKS_PER_SEC;
-
-    // Loop until the current time reaches the end time
-    while (clock() < end_time);
+	sleep(seconds);
 }
 int help_fn(){
 	printf(help);
@@ -105,7 +103,7 @@ int runs_command(char* input, enum command_type cmd){
 			exit(1);
 		}
 	}
-	char new_url[(sizeof(url) - 1) + 8 + (sizeof(v_linux) - 1)];
+	char new_url[(sizeof(url_char) - 1) + 9 + (sizeof(v_linux_char) - 1)];
 	i = 0;
 	for(;(*url) != '\0';i++){
 		new_url[i] = *url;
@@ -127,6 +125,9 @@ int runs_command(char* input, enum command_type cmd){
 	if(going_to_install_something){
 		system("rm -rf ~/Downloads/v_linux.zip");
 		system("rm -rf ~/Downloads/v_linux");
+		printf("\n");
+		printf(new_url);
+		printf("\n");
 		system(new_url);
 	}
 	if(going_to_install_something){
@@ -189,6 +190,7 @@ int runs_command(char* input, enum command_type cmd){
 		FILE *file = fopen("vzillash.sh", "w");
 		fprintf(file, new_command);
 		fclose(file);
+		printf(job_done);
 		return 0;
 	}
     	if (old_path == NULL) {
@@ -228,20 +230,6 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	rm_command[i] = '\0';
-	printf("\n");
-	for(unsigned int sec_to_wait = 10;sec_to_wait >= 0;sec_to_wait--){
-		printf("\rDo you want to execute this operation? (seconds: %u)", sec_to_wait);
-		wait_s(1);
-	}
-	char str[100];
-	while(1){
-		printf("\nType in `yes` precisely, else press CTRL+C to quit the program: \n");
-		fgets(str, sizeof(str), stdin);
-		if( (str[0] == 'y') && (str[1] == 'e') && (str[2] == 's') && (str[3] == '\0') ){
-			break;	
-		}
-	}
-	printf(rm_command);
 	char command[4096];
 	char* export_path = "/usr/bin/vlang";
 	i = 0;
@@ -259,6 +247,25 @@ int runs_command(char* input, enum command_type cmd){
 	}
 	command[i] = '\0';
 	if((going_to_install_something)||(cmd == DELETE)){ //deletes previous installation from system
+		printf(rm_command);
+		printf("\n");
+		for(unsigned int sec_to_wait = 10;1;sec_to_wait--){
+			printf("\nDo you want to execute this operation? (seconds: %u)", sec_to_wait);
+			wait_s(1);
+			if(sec_to_wait == 0){
+				break;
+			}
+		}
+		char str[100];
+		printf(rm_command);
+		while(1){
+			printf("\nType in `yes` precisely, else press CTRL+C to quit the program: \n");
+			fgets(str, sizeof(str), stdin);
+			if( (str[0] == 'y') && (str[1] == 'e') && (str[2] == 's') ){
+				break;	
+			}
+		}
+		
 		system(rm_command);
 	}
 	if(going_to_install_something){
@@ -296,6 +303,7 @@ int runs_command(char* input, enum command_type cmd){
 	}
     	fprintf(file, path);
 	fclose(file);
+	printf(job_done);
 }
 int main (int argc, char **argvk){
 	char* keywords = "switch\0install\0add\0delete\0unlist\0";
@@ -334,3 +342,21 @@ int main (int argc, char **argvk){
 	} while ((*keywords) != '\0');
 	help_fn(); 
 }
+/*
+$33 = "wget https://github.c"
+(gdb) n
+112			new_url[i] = *url;
+(gdb) n
+113			url++;
+(gdb) n
+111		for(;(*url) != '\0';i++){
+(gdb) print new_url
+$34 = "wget https://github.co"
+(gdb) n
+112			new_url[i] = *url;
+(gdb) n
+113			url++;
+(gdb) print new_url
+$35 = "wget https://github.co"
+ */
+
