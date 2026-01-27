@@ -7,7 +7,8 @@ char help[] =
 "install: installs the version specified. If already installed, it removes the previous installation.\n"
 "switch: makes the version specified the default for the terminal session.\n"
 "add: installs the version specified without changing the default.\n"
-"delete: deletes the version specified.\n";
+"delete: deletes the version specified.\n"
+"unlist: removes mentions to the V transpiler path from the session's PATH environment variable.\n";
 char start[] = 
 "\\  //\n"
 " \\//ZILLA\n";
@@ -23,7 +24,8 @@ enum command_type{
 	SWITCH = 0,
 	INSTALL = 1,
 	ADD = 2,
-	DELETE = 3
+	DELETE = 3,
+	UNLIST = 4
 };
 typedef struct version version;
 int str_to_int(char* ptr_to_char /*pointer to last digit*/){ 
@@ -48,11 +50,6 @@ int runs_command(char* input, enum command_type cmd){
 	printf("\n");
 	unsigned int i = 0;
 	bool going_to_install_something = (cmd == INSTALL) || (cmd == ADD);
-	const char* home = getenv("HOME");
-	if(home == NULL){
-		printf("Unable to get HOME directory");
-		return 1;
-	}
 	printf(start);
 	char* ref_to_input = input;
 	version versions[] = {
@@ -62,40 +59,43 @@ int runs_command(char* input, enum command_type cmd){
 		{.big = 0, .medium = 2, .mini = 4},
 		{.big = 0, .medium = 1, .mini = 29}
 	};
-	for(;(*input) != '.'; input++){
-	}
-	input--;
-	unsigned int big = str_to_int(input);
-	input++;
-	for(input++;((*input) != '\0')&&((*input) != '.'); input++){
-	}
-	input--;
-	unsigned int medium = str_to_int(input);
+	unsigned int big = 0;
+	unsigned int medium = 0;
 	unsigned int mini = 0;
-	if((*input) != '\0'){ // 3 numbers
-		input++;
-		char* ptr_to_char = input;
-		for(input++;(*input) != '\0'; input++){
+	if((*input) != '\0'){
+		for(;(*input) != '.'; input++){
 		}
 		input--;
-		mini = str_to_int(input);
-		if(mini == 0){
-			(*ptr_to_char) = '\0';
+		big = str_to_int(input);
+		input++;
+		for(input++;((*input) != '\0')&&((*input) != '.'); input++){
 		}
-	}else{ // 2 numbers
-		
-	}
-	bool valid = false;
-	for(i = 0; i < (sizeof(versions) / sizeof(version));i++){
-		version version_var = versions[i];
-		if((version_var.big == big) && (version_var.medium == medium) && (version_var.mini >= mini)){
-			valid = true;
-			break;
+		input--;
+		medium = str_to_int(input);
+		mini = 0;
+		if((*input) != '\0'){ // 3 numbers
+			input++;
+			char* ptr_to_char = input;
+			for(input++;(*input) != '\0'; input++){
+			}
+			input--;
+			mini = str_to_int(input);
+			if(mini == 0){
+				(*ptr_to_char) = '\0';
+			}
+		}	
+		bool valid = false;
+		for(i = 0; i < (sizeof(versions) / sizeof(version));i++){
+			version version_var = versions[i];
+			if((version_var.big == big) && (version_var.medium == medium) && (version_var.mini >= mini)){
+				valid = true;
+				break;
+			}
 		}
-	}
-	if(valid == false){
-		printf("Invalid version\n");
-		exit(1);
+		if(valid == false){
+			printf("Invalid version\n");
+			exit(1);
+		}
 	}
 	char new_url[(sizeof(url) - 1) + 8 + (sizeof(v_linux) - 1)];
 	i = 0;
@@ -167,13 +167,25 @@ int runs_command(char* input, enum command_type cmd){
 		new_old_path[k] = '\0';
 	}
 	i = 0;
-	
+	char start_of_command[] = "#!/bin/sh\nexport PATH=";
+	char new_command[(sizeof(start_of_command) - 1) + 4096];
+	for(;start_of_command[i] != '\0';i++){
+		new_command[i] = start_of_command[i];
+	}
+	for(unsigned int j = 0; new_old_path[j] != '\0';j++){
+		new_command[i] = new_old_path[j];
+		i++;
+	}
+	new_command[i] = '\0';
+	if(cmd == UNLIST){
+		system(new_command);
+	}
     	if (old_path == NULL) {
         	old_path = ""; 
     	}
 	char start_char[] = "cd ~/Downloads/v_linux;sudo mv v /usr/bin/vlang";
 	char* start = start_char;
-	char move_command[sizeof(start_char) + 8];
+	char move_command[(sizeof(start_char) - 1) + 8];
 	for(i = 0;(*start) != '\0';start++){
 		move_command[i] = *start;
 		i++;
@@ -190,7 +202,7 @@ int runs_command(char* input, enum command_type cmd){
 	move_command[i] = '\0';
 	char new_str_str[] = "sudo rm -rf /usr/bin/vlang"; 
 	char* new_str = new_str_str;
-	char rm_command[sizeof(new_str_str) + 8];
+	char rm_command[(sizeof(new_str_str) - 1) + 8];
 	for(i = 0;(*new_str) != '\0';new_str++){
 		rm_command[i] = *new_str;
 		i++;
@@ -208,9 +220,6 @@ int runs_command(char* input, enum command_type cmd){
 	char command[4096];
 	char* export_path = "/usr/bin/vlang";
 	i = 0;
-	for(;home[i] != '\0';i++){
-		command[i] = home[i];
-	}
 	for(;(*export_path) != '\0';export_path++){
 		command[i] = *export_path;
 		i++;
@@ -231,9 +240,9 @@ int runs_command(char* input, enum command_type cmd){
 		system(move_command);
 	}
 	i = 0;
-	char* start_of_command = "#!/bin/sh\nexport PATH=";
-	for(;(*start_of_command) != '\0';start_of_command++){
-		path[i] = *start_of_command;
+	char* start_of_command_ptr = &(start_of_command[0]);
+	for(;(*start_of_command_ptr) != '\0';start_of_command_ptr++){
+		path[i] = *start_of_command_ptr;
 		i++;
 	}
 	for(unsigned int j = 0;new_old_path[j] != '\0';j++){
@@ -264,12 +273,12 @@ int runs_command(char* input, enum command_type cmd){
 	fclose(file);
 }
 int main (int argc, char **argvk){
-	if(argc != 3){
+	char* keywords = "switch\0install\0add\0delete\0unlist\0";
+	enum command_type a_command = 0;
+	if(argc <= 1){
 		help_fn();
 		return 0;
 	}
-	char* keywords = "switch\0install\0add\0delete\0";
-	enum command_type a_command = 0;
 	do{
 		bool correct = true;
 		unsigned int counter = 0;
@@ -285,7 +294,15 @@ int main (int argc, char **argvk){
 			counter++;
 		}
 		if(correct){
-			runs_command(argvk[2], a_command);	
+			if(a_command != UNLIST){
+				if(argc != 3){
+					help_fn();
+					return 0;
+				}
+				runs_command(argvk[2], a_command);
+				return 0;
+			}
+			runs_command(nothing, a_command);	
 			return 0;
 		}
 		a_command++;
