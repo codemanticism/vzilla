@@ -1,6 +1,6 @@
 A manager specifically for the V language.
 
-*** This is a work in progress.
+<b> This is a work in progress. </b>
 
 Note: this scripts messes with the /usr/bin directory of the system, so you might want to be careful.
 
