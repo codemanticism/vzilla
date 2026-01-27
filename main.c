@@ -36,6 +36,14 @@ int str_to_int(char* ptr_to_char /*pointer to last digit*/){
 	}
 	return result;
 }
+void wait_s(int seconds) {
+    // Calculate the time when the wait should end
+    clock_t start_time = clock();
+    clock_t end_time = start_time + seconds * CLOCKS_PER_SEC;
+
+    // Loop until the current time reaches the end time
+    while (clock() < end_time);
+}
 int help_fn(){
 	printf(help);
 	FILE *file = fopen("vzillash.sh", "w");
@@ -178,7 +186,10 @@ int runs_command(char* input, enum command_type cmd){
 	}
 	new_command[i] = '\0';
 	if(cmd == UNLIST){
-		system(new_command);
+		FILE *file = fopen("vzillash.sh", "w");
+		fprintf(file, new_command);
+		fclose(file);
+		return 0;
 	}
     	if (old_path == NULL) {
         	old_path = ""; 
@@ -217,6 +228,20 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	rm_command[i] = '\0';
+	printf("\n");
+	for(unsigned int sec_to_wait = 10;sec_to_wait >= 0;sec_to_wait--){
+		printf("\rDo you want to execute this operation? (seconds: %u)", sec_to_wait);
+		wait_s(1);
+	}
+	char str[100];
+	while(1){
+		printf("\nType in `yes` precisely, else press CTRL+C to quit the program: \n");
+		fgets(str, sizeof(str), stdin);
+		if( (str[0] == 'y') && (str[1] == 'e') && (str[2] == 's') && (str[3] == '\0') ){
+			break;	
+		}
+	}
+	printf(rm_command);
 	char command[4096];
 	char* export_path = "/usr/bin/vlang";
 	i = 0;
@@ -282,7 +307,6 @@ int main (int argc, char **argvk){
 	do{
 		bool correct = true;
 		unsigned int counter = 0;
-		printf("/%c\n", *keywords);
 		for(;(*keywords) != '\0';keywords++){
 			if(argvk[1][counter] != (*keywords)){
 				correct = false;
