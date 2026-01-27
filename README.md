@@ -1,6 +1,6 @@
 A manager specifically for the V language that is a work in progress. **Note: this scripts messes with the /usr/bin directory of the system, so you might want to be careful.**
 
-This updates the path environment variable for the session. To use V in a terminal session with this tool, put that into `~/.bashrc` or whatever the equivalent is in the shell used or type `source `, then whatever directory, `run.sh switch ` and then whatever version, but it has to be in whatever directory `run.sh` properly. Don't run it the normal way (`./run.sh and so on and so forth), because then it won't work as intented.
+This updates the path environment variable for the session. To use V in a terminal session with this tool, put that into `~/.bashrc` or whatever the equivalent is in the shell used or type `source `, then whatever directory, `run.sh switch ` and then whatever version, but it has to be in whatever directory `run.sh` properly. Don't run it the normal way (`./run.sh` and so on and so forth), because then it won't work as intented.
 
 This is how:
 
