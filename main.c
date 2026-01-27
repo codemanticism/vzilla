@@ -4,20 +4,29 @@
 #include <string.h>
 char help[] =
 "Manager for the V language for Linux.\n"
-"install: installs the version specified \n"
-"switch: makes the version specified the default \n";
+"install: installs the version specified. If already installed, it removes the previous installation.\n"
+"switch: makes the version specified the default for the terminal session.\n"
+"add: installs the version specified without changing the default.\n"
+"delete: deletes the version specified.\n";
 char start[] = 
 "\\  //\n"
-" \\//ILLA\n";
+" \\//ZILLA\n";
 char* url = "wget https://github.com/vlang/v/releases/download/";
 char* v_linux = "/v_linux.zip -O ~/Downloads/v_linux.zip";
+char* nothing = "";
 struct version{
 	unsigned int big;
 	unsigned int medium;
 	unsigned int mini;
 };
+enum command_type{
+	SWITCH = 0,
+	INSTALL = 1,
+	ADD = 2,
+	DELETE = 3
+};
 typedef struct version version;
-int str_to_int(char* ptr_to_char){
+int str_to_int(char* ptr_to_char /*pointer to last digit*/){ 
 	unsigned int result = 0;
 	for(;((*ptr_to_char) >= '0')&&((*ptr_to_char) <= '9');ptr_to_char--){
 		result *= 10;
@@ -32,13 +41,13 @@ int help_fn(){
         	perror("Error opening file");
         	return 1;
     	}
-	char* nothing = "";
     	fprintf(file, nothing);
 	fclose(file);
 }
-int install(char* input, bool switch_or_not){
+int runs_command(char* input, enum command_type cmd){
 	printf("\n");
 	unsigned int i = 0;
+	bool going_to_install_something = (cmd == INSTALL) || (cmd == ADD);
 	const char* home = getenv("HOME");
 	if(home == NULL){
 		printf("Unable to get HOME directory");
@@ -106,18 +115,17 @@ int install(char* input, bool switch_or_not){
 	new_url[i] = '\0';
 	i = 0;
 	char path[4096];
-	char* _ = "#!/bin/sh\nexport PATH=";
 	char* another_copy = "/Downloads/v_linux/v";
-	if(switch_or_not == false){
+	if(going_to_install_something){
 		system("rm -rf ~/Downloads/v_linux.zip");
 		system("rm -rf ~/Downloads/v_linux");
 		system(new_url);
 	}
-	if(switch_or_not == false){
+	if(going_to_install_something){
 		system("unzip ~/Downloads/v_linux.zip -d ~/Downloads/v_linux");
 	}
 	unsigned int before = 0;
-    	char* local_bin = "/.local/bin/vlang";
+    	char* local_bin = "/usr/bin/vlang"; //to remove references to that from the environment key.
 	char* old_path = getenv("PATH");
 	char new_old_path[4096];
 	i = 0;
@@ -163,42 +171,42 @@ int install(char* input, bool switch_or_not){
     	if (old_path == NULL) {
         	old_path = ""; 
     	}
-	char start_char[] = "cd ~/Downloads/v_linux;mv v ~/.local/bin/vlang";
+	char start_char[] = "cd ~/Downloads/v_linux;sudo mv v /usr/bin/vlang";
 	char* start = start_char;
-	char new_mem[sizeof(start_char) + 8];
+	char move_command[sizeof(start_char) + 8];
 	for(i = 0;(*start) != '\0';start++){
-		new_mem[i] = *start;
+		move_command[i] = *start;
 		i++;
 	}
 	char* another_ref = ref_to_input;
 	for(;(*ref_to_input) != '\0';ref_to_input++){
 		if((*ref_to_input) != '.'){
-			new_mem[i] = *ref_to_input;
+			move_command[i] = *ref_to_input;
 		}else{
-			new_mem[i] = '-';
+			move_command[i] = '-';
 		}
 		i++;
 	}
-	new_mem[i] = '\0';
-	char new_str_str[] = "rm -rf ~/.local/bin/vlang"; 
+	move_command[i] = '\0';
+	char new_str_str[] = "sudo rm -rf /usr/bin/vlang"; 
 	char* new_str = new_str_str;
-	char new_mem_2[sizeof(new_str_str) + 8];
+	char rm_command[sizeof(new_str_str) + 8];
 	for(i = 0;(*new_str) != '\0';new_str++){
-		new_mem_2[i] = *new_str;
+		rm_command[i] = *new_str;
 		i++;
 	}
 	char* another_another_ref = another_ref;
 	for(;(*another_ref) != '\0';another_ref++){
 		if((*another_ref) != '.'){
-			new_mem_2[i] = *another_ref;
+			rm_command[i] = *another_ref;
 		}else{
-			new_mem_2[i] = '-';
+			rm_command[i] = '-';
 		}
 		i++;
 	}
-	new_mem_2[i] = '\0';
+	rm_command[i] = '\0';
 	char command[4096];
-	char* export_path = "/.local/bin/vlang";
+	char* export_path = "/usr/bin/vlang";
 	i = 0;
 	for(;home[i] != '\0';i++){
 		command[i] = home[i];
@@ -216,13 +224,16 @@ int install(char* input, bool switch_or_not){
 		i++;
 	}
 	command[i] = '\0';
-	if(switch_or_not == false){
-		system(new_mem_2);
-		system(new_mem);
+	if((going_to_install_something)||(cmd == DELETE)){ //deletes previous installation from system
+		system(rm_command);
+	}
+	if(going_to_install_something){
+		system(move_command);
 	}
 	i = 0;
-	for(;(*_) != '\0';_++){
-		path[i] = *_;
+	char* start_of_command = "#!/bin/sh\nexport PATH=";
+	for(;(*start_of_command) != '\0';start_of_command++){
+		path[i] = *start_of_command;
 		i++;
 	}
 	for(unsigned int j = 0;new_old_path[j] != '\0';j++){
@@ -237,10 +248,18 @@ int install(char* input, bool switch_or_not){
 	}
 	path[i] = '\0';
 	FILE *file = fopen("vzillash.sh", "w");
-	if (file == NULL) {
-        	perror("Error opening file");
-        	return 1;
-    	}
+	if((cmd == INSTALL)||(cmd == SWITCH)){ //switches the current
+		if (file == NULL) {
+        		perror("Error opening file");
+        		return 1;
+    		}
+	}else{
+		if (file == NULL) {
+        		perror("Error opening file");
+        		return 1;
+    		}
+		path[0] = '\0';
+	}
     	fprintf(file, path);
 	fclose(file);
 }
@@ -249,34 +268,28 @@ int main (int argc, char **argvk){
 		help_fn();
 		return 0;
 	}
-	char* install_keyword = "install";
-	char* switch_keyword = "switch";
-	bool correct = true;
-	unsigned int counter = 0;
-	for(;(*install_keyword) != '\0';install_keyword++){
-		if(argvk[1][counter] != (*install_keyword)){
-			correct = false;
-			break;
-		}
-		counter++;
-	}
-	if(correct){
-		install(argvk[2], false);	
-		return 0;
-	}
-	counter = 0;
-	correct = true;
-	for(;(*switch_keyword) != '\0';switch_keyword++){
-		if(argvk[1][counter] != (*switch_keyword)){
-			correct = false;
-			break;
-		}
-		counter++;
-	}
-	if(correct){
-		install(argvk[2], true);
-		return 0;
-	}
-	help_fn(); 
+	char* keywords = "switch\0install\0add\0delete\0";
+	enum command_type a_command = 0;
+	do{
+		bool correct = true;
+		unsigned int counter = 0;
+		printf("/%c\n", *keywords);
+		for(;(*keywords) != '\0';keywords++){
+			if(argvk[1][counter] != (*keywords)){
+				correct = false;
+				for(;(*keywords) != '\0'; keywords++){
 
+				}
+				break;
+			}
+			counter++;
+		}
+		if(correct){
+			runs_command(argvk[2], a_command);	
+			return 0;
+		}
+		a_command++;
+		keywords++;
+	} while ((*keywords) != '\0');
+	help_fn(); 
 }
