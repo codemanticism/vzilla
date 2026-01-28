@@ -21,7 +21,7 @@ char* job_done = "Job done!\n";
 struct version{
 	unsigned int major;
 	unsigned int minor;
-	unsigned int mini;
+	unsigned int patch;
 };
 enum command_type{
 	SWITCH = 0,
@@ -59,15 +59,16 @@ int runs_command(char* input, enum command_type cmd){
 	printf(start);
 	char* ref_to_input = input;
 	version versions[] = {
-		{.major = 0, .minor = 5, .mini = 0},
-		{.major = 0, .minor = 4, .mini = 12},
-		{.major = 0, .minor = 3, .mini = 4},
-		{.major = 0, .minor = 2, .mini = 4},
-		{.major = 0, .minor = 1, .mini = 29}
+		{.major = 0, .minor = 5, .patch = 0},
+		{.major = 0, .minor = 4, .patch = 12},
+		{.major = 0, .minor = 3, .patch = 4},
+		{.major = 0, .minor = 2, .patch = 4},
+		{.major = 0, .minor = 1, .patch = 29}
 	};
+
 	unsigned int major = 0;
 	unsigned int minor = 0;
-	unsigned int mini = 0;
+	unsigned int patch = 0;
 	if((*input) != '\0'){
 		for(;(*input) != '.'; input++){
 		}
@@ -78,22 +79,22 @@ int runs_command(char* input, enum command_type cmd){
 		}
 		input--;
 		minor = str_to_int(input);
-		mini = 0;
+		patch = 0;
 		if((*input) != '\0'){ // 3 numbers
 			input++;
 			char* ptr_to_char = input;
 			for(input++;(*input) != '\0'; input++){
 			}
 			input--;
-			mini = str_to_int(input);
-			if(mini == 0){
+			patch = str_to_int(input);
+			if(patch == 0){
 				(*ptr_to_char) = '\0';
 			}
 		}	
 		bool valid = false;
 		for(i = 0; i < (sizeof(versions) / sizeof(version));i++){
 			version version_var = versions[i];
-			if((version_var.major == major) && (version_var.minor == minor) && (version_var.mini >= mini)){
+			if((version_var.major == major) && (version_var.minor == minor) && (version_var.patch >= patch)){
 				valid = true;
 				break;
 			}
@@ -103,12 +104,14 @@ int runs_command(char* input, enum command_type cmd){
 			exit(1);
 		}
 	}
+
 	char new_url[(sizeof(url_char) - 1) + 9 + (sizeof(v_linux_char) - 1)];
 	i = 0;
 	for(;(*url) != '\0';i++){
 		new_url[i] = *url;
 		url++;
 	}
+
 	char* copy = ref_to_input;
 	for(;(*copy) != '\0';i++){
 		new_url[i] = *copy;
@@ -120,6 +123,7 @@ int runs_command(char* input, enum command_type cmd){
 	}
 	new_url[i] = '\0';
 	i = 0;
+
 	char path[4096];
 	system("mkdir ~/.v_downloads");
 	if(going_to_install_something){
@@ -134,6 +138,7 @@ int runs_command(char* input, enum command_type cmd){
 		system("unzip ~/.v_downloads/v_linux.zip -d ~/.v_downloads/v_linux");
 	}
 	unsigned int before = 0;
+
     	char* local_bin = "/usr/bin/vlang"; //to remove references to that from the environment key.
 	char* old_path = getenv("PATH");
 	char new_old_path[4096];
@@ -175,6 +180,7 @@ int runs_command(char* input, enum command_type cmd){
 	}else{
 		new_old_path[k] = '\0';
 	}
+
 	i = 0;
 	char start_of_command[] = "#!/bin/sh\nexport PATH=";
 	char new_command[(sizeof(start_of_command) - 1) + 4096];
@@ -186,6 +192,7 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	new_command[i] = '\0';
+
 	if(cmd == UNLIST){
 		FILE *file = fopen("vzillash.sh", "w");
 		fprintf(file, new_command);
@@ -196,6 +203,7 @@ int runs_command(char* input, enum command_type cmd){
     	if (old_path == NULL) {
         	old_path = ""; 
     	}
+
 	char start_char[] = "cd ~/.v_downloads/v_linux;sudo mv v /usr/bin/vlang";
 	char* start = start_char;
 	char move_command[(sizeof(start_char) - 1) + 8];
@@ -213,6 +221,7 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	move_command[i] = '\0';
+
 	char new_str_str[] = "sudo rm -rf /usr/bin/vlang"; 
 	char* new_str = new_str_str;
 	char rm_command[(sizeof(new_str_str) - 1) + 8];
@@ -230,6 +239,7 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	rm_command[i] = '\0';
+
 	char command[4096];
 	char* export_path = "/usr/bin/vlang";
 	i = 0;
@@ -246,6 +256,7 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	command[i] = '\0';
+
 	if((going_to_install_something)||(cmd == DELETE)){ //deletes previous installation from system
 		printf("If there's any previous installation of this exact version, the following command is supposed to clear it up.\n");
 		printf(rm_command);
@@ -272,6 +283,7 @@ int runs_command(char* input, enum command_type cmd){
 	if(going_to_install_something){
 		system(move_command);
 	}
+
 	i = 0;
 	char* start_of_command_ptr = &(start_of_command[0]);
 	for(;(*start_of_command_ptr) != '\0';start_of_command_ptr++){
@@ -289,6 +301,7 @@ int runs_command(char* input, enum command_type cmd){
 		i++;
 	}
 	path[i] = '\0';
+
 	FILE *file = fopen("vzillash.sh", "w");
 	if((cmd == INSTALL)||(cmd == SWITCH)){ //switches the current
 		if (file == NULL) {
@@ -302,6 +315,7 @@ int runs_command(char* input, enum command_type cmd){
     		}
 		path[0] = '\0';
 	}
+
     	fprintf(file, path);
 	fclose(file);
 	printf(job_done);
@@ -343,21 +357,3 @@ int main (int argc, char **argvk){
 	} while ((*keywords) != '\0');
 	help_fn(); 
 }
-/*
-$33 = "wget https://github.c"
-(gdb) n
-112			new_url[i] = *url;
-(gdb) n
-113			url++;
-(gdb) n
-111		for(;(*url) != '\0';i++){
-(gdb) print new_url
-$34 = "wget https://github.co"
-(gdb) n
-112			new_url[i] = *url;
-(gdb) n
-113			url++;
-(gdb) print new_url
-$35 = "wget https://github.co"
- */
-
