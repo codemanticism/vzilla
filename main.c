@@ -14,13 +14,13 @@ char start[] =
 " \\//ZILLA\n";
 char url_char[] = "wget --no-check-certificate https://www.github.com/vlang/v/releases/download/";
 char* url = url_char;
-char v_linux_char[] = "/v_linux.zip -O ~/Downloads/v_linux.zip";
+char v_linux_char[] = "/v_linux.zip -O ~/.v_downloads/v_linux.zip";
 char* v_linux = v_linux_char;
 char* nothing = "";
-char* job_done = "Job done!";
+char* job_done = "Job done!\n";
 struct version{
-	unsigned int big;
-	unsigned int medium;
+	unsigned int major;
+	unsigned int minor;
 	unsigned int mini;
 };
 enum command_type{
@@ -59,25 +59,25 @@ int runs_command(char* input, enum command_type cmd){
 	printf(start);
 	char* ref_to_input = input;
 	version versions[] = {
-		{.big = 0, .medium = 5, .mini = 0},
-		{.big = 0, .medium = 4, .mini = 12},
-		{.big = 0, .medium = 3, .mini = 4},
-		{.big = 0, .medium = 2, .mini = 4},
-		{.big = 0, .medium = 1, .mini = 29}
+		{.major = 0, .minor = 5, .mini = 0},
+		{.major = 0, .minor = 4, .mini = 12},
+		{.major = 0, .minor = 3, .mini = 4},
+		{.major = 0, .minor = 2, .mini = 4},
+		{.major = 0, .minor = 1, .mini = 29}
 	};
-	unsigned int big = 0;
-	unsigned int medium = 0;
+	unsigned int major = 0;
+	unsigned int minor = 0;
 	unsigned int mini = 0;
 	if((*input) != '\0'){
 		for(;(*input) != '.'; input++){
 		}
 		input--;
-		big = str_to_int(input);
+		major = str_to_int(input);
 		input++;
 		for(input++;((*input) != '\0')&&((*input) != '.'); input++){
 		}
 		input--;
-		medium = str_to_int(input);
+		minor = str_to_int(input);
 		mini = 0;
 		if((*input) != '\0'){ // 3 numbers
 			input++;
@@ -93,7 +93,7 @@ int runs_command(char* input, enum command_type cmd){
 		bool valid = false;
 		for(i = 0; i < (sizeof(versions) / sizeof(version));i++){
 			version version_var = versions[i];
-			if((version_var.big == big) && (version_var.medium == medium) && (version_var.mini >= mini)){
+			if((version_var.major == major) && (version_var.minor == minor) && (version_var.mini >= mini)){
 				valid = true;
 				break;
 			}
@@ -121,17 +121,17 @@ int runs_command(char* input, enum command_type cmd){
 	new_url[i] = '\0';
 	i = 0;
 	char path[4096];
-	char* another_copy = "/Downloads/v_linux/v";
+	system("mkdir ~/.v_downloads");
 	if(going_to_install_something){
-		system("rm -rf ~/Downloads/v_linux.zip");
-		system("rm -rf ~/Downloads/v_linux");
+		system("rm -rf ~/.v_downloads/v_linux.zip");
+		system("rm -rf ~/.v_downloads/v_linux");
 		printf("\n");
 		printf(new_url);
 		printf("\n");
 		system(new_url);
 	}
 	if(going_to_install_something){
-		system("unzip ~/Downloads/v_linux.zip -d ~/Downloads/v_linux");
+		system("unzip ~/.v_downloads/v_linux.zip -d ~/.v_downloads/v_linux");
 	}
 	unsigned int before = 0;
     	char* local_bin = "/usr/bin/vlang"; //to remove references to that from the environment key.
@@ -196,7 +196,7 @@ int runs_command(char* input, enum command_type cmd){
     	if (old_path == NULL) {
         	old_path = ""; 
     	}
-	char start_char[] = "cd ~/Downloads/v_linux;sudo mv v /usr/bin/vlang";
+	char start_char[] = "cd ~/.v_downloads/v_linux;sudo mv v /usr/bin/vlang";
 	char* start = start_char;
 	char move_command[(sizeof(start_char) - 1) + 8];
 	for(i = 0;(*start) != '\0';start++){
@@ -247,10 +247,11 @@ int runs_command(char* input, enum command_type cmd){
 	}
 	command[i] = '\0';
 	if((going_to_install_something)||(cmd == DELETE)){ //deletes previous installation from system
+		printf("If there's any previous installation of this exact version, the following command is supposed to clear it up.\n");
 		printf(rm_command);
 		printf("\n");
 		for(unsigned int sec_to_wait = 10;1;sec_to_wait--){
-			printf("\nDo you want to execute this operation? (seconds: %u)", sec_to_wait);
+			printf("Do you want to execute this operation? (seconds: %u)\n", sec_to_wait);
 			wait_s(1);
 			if(sec_to_wait == 0){
 				break;
