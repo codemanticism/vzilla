@@ -8,7 +8,8 @@ char help[] =
 "switch: makes the version specified the default for the terminal session.\n"
 "add: installs the version specified without changing the default.\n"
 "delete: deletes the version specified.\n"
-"unlist: removes mentions to the V transpiler path from the session's PATH environment variable.\n";
+"unlist: removes mentions to the V transpiler path from the session's PATH environment variable.\n"
+"setup: sets up vpm and vdocs for whatever version you typed in.\n";
 char start[] = 
 "\\  //\n"
 " \\//ZILLA\n";
