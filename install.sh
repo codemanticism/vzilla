@@ -1,4 +1,4 @@
-#/usr/bin/bash
+#!/bin/bash
 cd ~/.local/bin
 rm vzilla
 rm vzilla-c
@@ -15,3 +15,4 @@ echo 'mycmd() {
 }
 alias vzilla="mycmd"' >> ~/.bashrc
 cd -
+echo "Exit the session and then re-enter."
