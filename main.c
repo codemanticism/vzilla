@@ -28,9 +28,18 @@ enum command_type{
 	INSTALL = 1,
 	ADD = 2,
 	DELETE = 3,
-	UNLIST = 4
+	UNLIST = 4,
+	SETUP = 5
 };
 typedef struct version version;
+char* int_to_str(char* ptr_to_char, unsigned int result){
+	do {
+		(*ptr_to_char) =  '0' + (result % 10);
+		result /= 10;
+		ptr_to_char++;
+	} while (result > 0);
+	return ptr_to_char++;
+}
 int str_to_int(char* ptr_to_char /*pointer to last digit*/){ 
 	unsigned int result = 0;
 	for(;((*ptr_to_char) >= '0')&&((*ptr_to_char) <= '9');ptr_to_char--){
@@ -65,7 +74,19 @@ int runs_command(char* input, enum command_type cmd){
 		{.major = 0, .minor = 2, .patch = 4},
 		{.major = 0, .minor = 1, .patch = 29}
 	};
-
+	if((*input) == 'l'){
+		if((*(input + 1)) == '\0'){
+			free(input);
+			input = malloc(7);
+			char* later = int_to_str(input, versions[0].major);
+			(*later) = '.';
+			later++;
+			later = int_to_str(later, versions[0].minor);
+			(*later) = '.';
+			later++;
+			later = int_to_str(later, versions[0].patch);
+		}
+	}
 	unsigned int major = 0;
 	unsigned int minor = 0;
 	unsigned int patch = 0;
@@ -125,6 +146,7 @@ int runs_command(char* input, enum command_type cmd){
 	i = 0;
 
 	char path[4096];
+	system("rm -rf ~/.v_downloads");
 	system("mkdir ~/.v_downloads");
 	if(going_to_install_something){
 		system("rm -rf ~/.v_downloads/v_linux.zip");
@@ -136,6 +158,7 @@ int runs_command(char* input, enum command_type cmd){
 	}
 	if(going_to_install_something){
 		system("unzip ~/.v_downloads/v_linux.zip -d ~/.v_downloads/v_linux");
+		system("cd ~/.v_downloads/v_linux/v;make");
 	}
 	unsigned int before = 0;
 
@@ -203,7 +226,6 @@ int runs_command(char* input, enum command_type cmd){
     	if (old_path == NULL) {
         	old_path = ""; 
     	}
-
 	char start_char[] = "cd ~/.v_downloads/v_linux;sudo mv v /usr/bin/vlang";
 	char* start = start_char;
 	char move_command[(sizeof(start_char) - 1) + 8];
@@ -247,6 +269,7 @@ int runs_command(char* input, enum command_type cmd){
 		command[i] = *export_path;
 		i++;
 	}
+	char* another_3_ref = another_another_ref;
 	for(;(*another_another_ref) != '\0';another_another_ref++){
 		if((*another_another_ref) != '.'){
 			command[i] = *another_another_ref;
@@ -315,13 +338,41 @@ int runs_command(char* input, enum command_type cmd){
     		}
 		path[0] = '\0';
 	}
-
+	if(cmd == SETUP){
+		char* cmd = "/usr/bin/vlang";
+		char another_command[4096];
+		i = 0;
+		for(;(*cmd) != '\0'; cmd++){
+			another_command[i] = *cmd;
+			i++;
+		}
+		for(;(*another_3_ref) != '\0';another_3_ref++){
+			if((*another_3_ref) == '.'){
+				another_command[i] = '-';
+			}else{
+				another_command[i] = *another_3_ref;
+			}
+			i++;
+		}
+		another_command[i] = '\0';
+		printf(another_command);
+		if(chdir(another_command) != 0){
+			printf("\nchdir failed");
+			exit(1);
+		}
+		system("sudo ./v install --git https://github.com/vlang/markdown"); 
+		system("sudo ./v cmd/tools/vpm -o vpm");
+		system("sudo ./v cmd/tools/vdoc -o vdoc");
+		another_3_ref++;
+	}
+	printf("\n");
+	printf("NOTE: You might want to install glibc-devel and kernel-headers to be able to use tcc (Tiny C Compiler) to generate debug builds.\n");
     	fprintf(file, path);
 	fclose(file);
 	printf(job_done);
 }
 int main (int argc, char **argvk){
-	char* keywords = "switch\0install\0add\0delete\0unlist\0";
+	char* keywords = "switch\0install\0add\0delete\0unlist\0setup\0";
 	enum command_type a_command = 0;
 	if(argc <= 1){
 		help_fn();
